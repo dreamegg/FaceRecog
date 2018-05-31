@@ -1,0 +1,14 @@
+===========================
+[DEBUG|face_detecter.py:30] 2018-05-29 10:42:09,058 > ===========================
+[INFO|face_detecter.py:30] 2018-05-29 10:43:39,573 > ===========================
+[INFO|face_detecter.py:30] 2018-05-29 10:44:50,905 > ===========================
+[INFO|face_detecter.py:111] 2018-05-29 10:44:50,953 > =====>[Prepare Train Data]
+[INFO|face_detecter.py:70] 2018-05-29 10:44:50,954 > =====>[Read Train Data and Preprocessing]
+[INFO|face_detecter.py:100] 2018-05-29 10:44:56,469 > find 127 face in 138 files (92%)
+[INFO|face_detecter.py:115] 2018-05-29 10:44:56,469 > =====>[Extract Feature]
+[INFO|face_detecter.py:124] 2018-05-29 10:45:05,016 > =====>[Train SVM]
+[INFO|face_detecter.py:135] 2018-05-29 10:45:05,032 > =====>[Prepare Test Data]
+[INFO|face_detecter.py:70] 2018-05-29 10:45:05,033 > =====>[Read Train Data and Preprocessing]
+[INFO|face_detecter.py:100] 2018-05-29 10:45:08,934 > find 100 face in 104 files (96%)
+[INFO|face_detecter.py:151] 2018-05-29 10:45:15,736 > =====>[prediction using SVM]
+[INFO|face_detecter.py:164] 2018-05-29 10:45:15,737 > Test Result =89.0   : 89 /  100

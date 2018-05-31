@@ -1,0 +1,11 @@
+[INFO|face_detecter.py:112] 2018-05-30 13:12:43,494 > Namespace(LBPsize=6, classifier='NN', k=64)
+[INFO|face_detecter.py:113] 2018-05-30 13:12:43,495 > =====>[Prepare Train Data]
+[INFO|face_detecter.py:71] 2018-05-30 13:12:43,495 > =====>[Read Train Data and Preprocessing]
+[INFO|face_detecter.py:101] 2018-05-30 13:12:50,182 > find 127 face in 138 files (92%)
+[INFO|face_detecter.py:118] 2018-05-30 13:12:50,182 > =====>[Extract Feature]
+[INFO|face_detecter.py:130] 2018-05-30 13:12:50,370 > =====>[Train SVM]
+[INFO|face_detecter.py:142] 2018-05-30 13:12:50,370 > =====>[Prepare Test Data]
+[INFO|face_detecter.py:71] 2018-05-30 13:12:50,370 > =====>[Read Train Data and Preprocessing]
+[INFO|face_detecter.py:101] 2018-05-30 13:12:54,940 > find 100 face in 104 files (96%)
+[INFO|face_detecter.py:158] 2018-05-30 13:12:55,119 > =====>[prediction using SVM]
+[INFO|face_detecter.py:171] 2018-05-30 13:12:56,962 > Test Result =57.0   : 57 /  100
