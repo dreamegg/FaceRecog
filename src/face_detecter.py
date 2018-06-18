@@ -10,13 +10,19 @@ from datetime import datetime
 from matplotlib import pyplot as plt
 from skimage import feature
 from sklearn.svm import LinearSVC
+from sklearn.model_selection import train_test_split
 
 from knn import KNN
-
+Q
 parser = argparse.ArgumentParser(description='Face Recognition using LinearSVM')
-parser.add_argument('--LBPsize', default= 6)
-parser.add_argument('--k', default= 3)
+parser.add_argument('--LBPsize', default= 8*4)
+parser.add_argument('--FDfile', default='../Trained/haarcascade_frontalface_default.xml')
+parser.add_argument('--sf', default= 1.001)
+parser.add_argument('--k', default= 8)
+parser.add_argument('--C', default= 1)
 parser.add_argument('--classifier', default="NN", help='SVM/NN')
+parser.add_argument('--dataset', default="FACE", help='FACE/CASIA')
+
 opts = parser.parse_args()
 
 
@@ -69,8 +75,9 @@ def LBP (img, cell_h, cell_w) :
 
 def ReadPreprocessData (rootPath) :
 	logger.info("=====>[Read Train Data and Preprocessing]")
-	image_list = []
-	label_list = []
+	#image_list = []
+	#label_list = []
+	img_id_list = []
 
 	file_count = 0
 
@@ -83,25 +90,26 @@ def ReadPreprocessData (rootPath) :
 			img = cv.imread(full_fname)
 			gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
 
-			faces = face_cascade.detectMultiScale(gray, 1.3, 5)
+			faces = face_cascade.detectMultiScale(gray, scaleFactor = opts.sf, 5)
 			for (x, y, w, h) in faces:
 				cv.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
 				face_array = gray[y:y + h, x:x + w]
 				face_rewsized = cv.resize(face_array, (128, 128))
 				normalizedImg = cv.normalize(face_rewsized, face_rewsized, 0, 255, cv.NORM_MINMAX)
-				image_list.append(normalizedImg)
-				label_list.append(full_fname.split("\\")[-2])
+				#image_list.append(normalizedImg)
+				#label_list.append(full_fname.split("\\")[-2])
+				img_id_list.append((normalizedImg,full_fname.split("\\")[-2]))
 
-				roi_gray = gray[y:y + h, x:x + w]
-				roi_color = img[y:y + h, x:x + w]
-				eyes = eye_cascade.detectMultiScale(roi_gray)
-				for (ex, ey, ew, eh) in eyes:
-					cv.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
+				#roi_gray = gray[y:y + h, x:x + w]
+				#roi_color = img[y:y + h, x:x + w]
+				#eyes = eye_cascade.detectMultiScale(roi_gray)
+				#for (ex, ey, ew, eh) in eyes:
+				#	cv.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
 
-	logger.info ("find {} face in {} files ({}%)".format(len(image_list),file_count,len(image_list)*100//file_count))
-	return image_list, label_list
+	logger.info ("find {} face in {} files ({}%)".format(len(img_id_list),file_count,len(img_id_list)*100//file_count))
+	return img_id_list
 
-face_cascade = cv.CascadeClassifier('../Trained/haarcascade_frontalface_default.xml')
+face_cascade = cv.CascadeClassifier(opts.FDfile)
 eye_cascade = cv.CascadeClassifier('../Trained/haarcascade_eye.xml')
 
 start_time = time.time()
@@ -113,11 +121,14 @@ logger.info(opts)
 logger.info("=====>[Prepare Train Data]")
 
 #=======Make Face List==========
-face_list, face_label_list = ReadPreprocessData('../data/Face_Database/Train')
+if opts.dataset == 'FACE' :  face_list = ReadPreprocessData('../data/Face_Database/Train')
+if opts.dataset == 'CASIA' :
+	all_list = ReadPreprocessData('../data/CASIA-WebFace')
+	face_list ,testImage_List = train_test_split(all_list,test_size=0.1)
 
 logger.info("=====>[Extract Feature]")
 for i in range(len(face_list)) :
-	out = LBP(face_list[i], opts.LBPsize,opts.LBPsize)
+	out = LBP(face_list[i][0], opts.LBPsize,opts.LBPsize)
 	hist, bin_edges = np.histogram(out, bins=255)
 
 	outLBP_list.append(out)
@@ -125,22 +136,22 @@ for i in range(len(face_list)) :
 
 if (opts.classifier == 'SVM') :
 	logger.info("=====>[Train SVM]")
-	model = LinearSVC(C=100.0, random_state=42)
+	model = LinearSVC(C=opts.C, random_state=42)
 elif (opts.classifier == 'NN') :
-	logger.info("=====>[Train SVM]")
+	logger.info("=====>[Train NN]")
 	model = KNN(opts.k)
 
-model.fit(outHisto_list, face_label_list)
+model.fit(outHisto_list,[x[1] for x in face_list])
 
-'''plt.subplot(221), plt.imshow(face_list[1], 'gray'), plt.title('Origon')
-plt.subplot(222), plt.imshow(cv.resize(outLBP_list[1], (128, 128), interpolation=cv.INTER_NEAREST), 'gray'), plt.title('LBP')
-plt.subplot(223), plt.bar(bin_edges[:-1], outHisto_list[1], width=1)
-plt.xlim(min(bin_edges), max(bin_edges))
-plt.show()
-'''
+#plt.subplot(221), plt.imshow(face_list[1], 'gray'), plt.title('Origon')
+#plt.subplot(222), plt.imshow(cv.resize(outLBP_list[1], (128, 128), interpolation=cv.INTER_NEAREST), 'gray'), plt.title('LBP')
+#plt.subplot(223), plt.bar(bin_edges[:-1], outHisto_list[1], width=1)
+#plt.xlim(min(bin_edges), max(bin_edges))
+#plt.show()
+
 
 logger.info("=====>[Prepare Test Data]")
-testImage_List, test_label_list =  ReadPreprocessData('../data/Face_Database/Test')
+if opts.dataset == 'FACE' :  testImage_List =  ReadPreprocessData('../data/Face_Database/Test')
 
 #plt.subplot(221), plt.imshow(testImage_List[1], 'gray'), plt.title('Origon')
 #plt.subplot(222), plt.imshow(cv.resize(outLBP_list[1], (128, 128), interpolation=cv.INTER_NEAREST), 'gray'), plt.title('LBP')
@@ -150,7 +161,7 @@ testImage_List, test_label_list =  ReadPreprocessData('../data/Face_Database/Tes
 
 testHisto_list=[]
 for i in range(len(testImage_List)) :
-	out = LBP(testImage_List[i], opts.LBPsize,opts.LBPsize)
+	out = LBP(testImage_List[i][0], opts.LBPsize,opts.LBPsize)
 	hist, bin_edges = np.histogram(out, bins=255)
 
 	testHisto_list.append(hist)
@@ -164,8 +175,8 @@ for i in range(len(testImage_List)) :
 	#cv.putText(testImage_List[i], prediction[i]+"  GT:"+test_label_list[i], (5, 20), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
 	#cv.imshow("Image", testImage_List[i])
 	#cv.waitKey(0)
-	if test_label_list[i] == prediction[i] :correct=correct+1
+	if testImage_List[i][1] == prediction[i] :correct=correct+1
 	else : logger.debug ("Fail!")
-	logger.debug("test count [{}] : Predict =>".format(i)+prediction[i] + "    GT : " +test_label_list[i])
+	logger.debug("test count [{}] : Predict =>".format(i)+prediction[i] + "    GT : " +testImage_List[i][1])
 
-logger.info ("Test Result ={}   : {} /  {}".format(correct*100 / len(testImage_List), correct, len(testImage_List)))
+logger.info ("Test Result ={} /  {} ({}%)".format(correct, len(testImage_List),correct*100 // len(testImage_List)))
